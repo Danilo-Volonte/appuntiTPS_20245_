@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -9,29 +11,54 @@ namespace lezione04112024
 {
     internal class Program
     {
-        static Thread t1, t2;
-        static List<int> lista;
+        static Thread t1, t2, t3;
+        static ConcurrentQueue<int> coda; //risolve il problemma della lista in cui vengono messi dei nuovi elemnti contemporaneamemnte
+        static Random rnd;
+        static int cont;
+        static int totale;
+        static int n;
         static void Main(string[] args)
         {
-            lista = new List<int>();
-            t1 = new Thread(salvaN);
-            t2 = new Thread(salvaN2);
+            coda = new ConcurrentQueue<int> ();
+            cont = 0;
+            totale = 0;
+            t1 = new Thread(numeroCasuale);
+            t2 = new Thread(numeroCasuale);
+            t3 = new Thread(stampa);
+
+            t1.Start();
+            t2.Start();
+            t3.Start();
+
+            Console.ReadKey();
         }
 
-        private static void salvaN()
+        private static void numeroCasuale()
         {
-            for(int i = 1; i <= 10000; i++)
+            //int casuale = Random.Next();
+            for(int i = 0; i < 1000; i++)
             {
-                lista.Add(i);
+                coda.Enqueue(i); //mette il numero in coda (e forse stampa)
+                Thread.Sleep(40);
             }
         }
-         //in questo modo i due possono acccedere alla lista contemporaneamente e questo crea degli errori
-        private static void salvaN2()
+
+        private static void stampa()
         {
-            for (int i = 1; i <= 10000; i++)
+            if (cont < 1000)
             {
-                lista.Add(i);
+                if(coda.TryDequeue(out n))
+                {
+                    cont++;
+                    totale += n;
+                    Console.WriteLine($"Media numeri: {(double)totale/cont}");
+                }
+                else
+                {
+                    Thread.Sleep(20);
+                }
             }
         }
+
     }
 }
